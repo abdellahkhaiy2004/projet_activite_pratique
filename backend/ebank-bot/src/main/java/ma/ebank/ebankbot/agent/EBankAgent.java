@@ -7,6 +7,7 @@ import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.ai.tool.ToolCallback;
 import org.springframework.ai.tool.ToolCallbackProvider;
 import org.springframework.stereotype.Component;
+import reactor.core.publisher.Flux;
 
 /**
  * The single AI agent of the application. REST, Telegram and Discord all call this class,
@@ -59,6 +60,15 @@ public class EBankAgent {
                 .user(query)
                 .advisors(advisor -> advisor.param(ChatMemory.CONVERSATION_ID, conversationId))
                 .call()
+                .content();
+    }
+
+    /** Streams the answer chunk by chunk (same prompt, memory and tools as askAgent). */
+    public Flux<String> streamAgent(String conversationId, String query) {
+        return chatClient.prompt()
+                .user(query)
+                .advisors(advisor -> advisor.param(ChatMemory.CONVERSATION_ID, conversationId))
+                .stream()
                 .content();
     }
 }
