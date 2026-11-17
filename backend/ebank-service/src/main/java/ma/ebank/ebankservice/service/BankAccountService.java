@@ -1,14 +1,18 @@
 package ma.ebank.ebankservice.service;
 
 import lombok.RequiredArgsConstructor;
+import ma.ebank.ebankservice.clients.CustomerRestClient;
 import ma.ebank.ebankservice.entity.BankAccount;
+import ma.ebank.ebankservice.model.Customer;
 import ma.ebank.ebankservice.repository.BankAccountRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @Service
@@ -16,19 +20,22 @@ import java.util.UUID;
 public class BankAccountService {
 
     private final BankAccountRepository bankAccountRepository;
+    private final CustomerRestClient customerRestClient;
 
     public List<BankAccount> findAll() {
-        return bankAccountRepository.findAll();
+        return enrich(bankAccountRepository.findAll());
     }
 
     public BankAccount findById(String id) {
-        return bankAccountRepository.findById(id)
+        BankAccount account = bankAccountRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND, "Account not found with id " + id));
+        account.setCustomer(customerRestClient.findCustomerById(account.getCustomerId()));
+        return account;
     }
 
     public List<BankAccount> findByCustomerId(Long customerId) {
-        return bankAccountRepository.findByCustomerId(customerId);
+        return enrich(bankAccountRepository.findByCustomerId(customerId));
     }
 
     /** Id and creation date are generated here; the caller provides balance, type and customerId. */
@@ -45,5 +52,13 @@ public class BankAccountService {
                 .customerId(request.getCustomerId())
                 .build();
         return bankAccountRepository.save(account);
+    }
+
+    /** Attaches customer details to each account, calling customer-service once per distinct customer. */
+    private List<BankAccount> enrich(List<BankAccount> accounts) {
+        Map<Long, Customer> customers = new HashMap<>();
+        accounts.forEach(account -> account.setCustomer(
+                customers.computeIfAbsent(account.getCustomerId(), customerRestClient::findCustomerById)));
+        return accounts;
     }
 }
