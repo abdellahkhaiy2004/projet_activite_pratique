@@ -22,6 +22,7 @@ public class BankAccountService {
 
     private final BankAccountRepository bankAccountRepository;
     private final CustomerRestClient customerRestClient;
+    private final CustomerLookupService customerLookupService;
 
     public List<BankAccount> findAll() {
         return enrich(bankAccountRepository.findAll());
@@ -31,7 +32,7 @@ public class BankAccountService {
         BankAccount account = bankAccountRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND, "Account not found with id " + id));
-        account.setCustomer(customerRestClient.findCustomerById(account.getCustomerId()));
+        account.setCustomer(customerLookupService.findCustomer(account.getCustomerId()));
         return account;
     }
 
@@ -76,7 +77,7 @@ public class BankAccountService {
     private List<BankAccount> enrich(List<BankAccount> accounts) {
         Map<Long, Customer> customers = new HashMap<>();
         accounts.forEach(account -> account.setCustomer(
-                customers.computeIfAbsent(account.getCustomerId(), customerRestClient::findCustomerById)));
+                customers.computeIfAbsent(account.getCustomerId(), customerLookupService::findCustomer)));
         return accounts;
     }
 }

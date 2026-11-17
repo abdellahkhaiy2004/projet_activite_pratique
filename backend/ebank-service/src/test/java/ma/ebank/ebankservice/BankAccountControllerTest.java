@@ -3,6 +3,8 @@ package ma.ebank.ebankservice;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import feign.FeignException;
+import io.github.resilience4j.circuitbreaker.CircuitBreaker;
+import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import feign.Request;
 import ma.ebank.ebankservice.clients.CustomerRestClient;
 import ma.ebank.ebankservice.model.Customer;
@@ -36,11 +38,14 @@ class BankAccountControllerTest {
     MockMvc mockMvc;
     @Autowired
     ObjectMapper objectMapper;
+    @Autowired
+    CircuitBreakerRegistry circuitBreakerRegistry;
     @MockitoBean
     CustomerRestClient customerRestClient;
 
     @BeforeEach
     void stubCustomerService() {
+        circuitBreakerRegistry.circuitBreaker("customerService").reset();
         when(customerRestClient.findCustomerById(anyLong()))
                 .thenAnswer(inv -> new Customer(inv.getArgument(0), "Customer " + inv.getArgument(0), "c@mail.com"));
     }
@@ -122,5 +127,28 @@ class BankAccountControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"balance\":100,\"type\":\"CURRENT_ACCOUNT\",\"customerId\":2}"))
                 .andExpect(status().isServiceUnavailable());
+    }
+
+    @Test
+    void returnsFallbackCustomerWhenCustomerServiceIsDown() throws Exception {
+        when(customerRestClient.findCustomerById(anyLong())).thenThrow(new RuntimeException("connection refused"));
+        mockMvc.perform(get("/accounts/customer/1"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(5)))
+                .andExpect(jsonPath("$[0].customerId").value(1))
+                .andExpect(jsonPath("$[0].customer.name").value("Not available"));
+    }
+
+    @Test
+    void circuitOpensAfterRepeatedFailuresAndStillAnswers() throws Exception {
+        when(customerRestClient.findCustomerById(anyLong())).thenThrow(new RuntimeException("connection refused"));
+        for (int i = 0; i < 4; i++) {
+            mockMvc.perform(get("/accounts/customer/1")).andExpect(status().isOk());
+        }
+        org.junit.jupiter.api.Assertions.assertEquals(CircuitBreaker.State.OPEN,
+                circuitBreakerRegistry.circuitBreaker("customerService").getState());
+        mockMvc.perform(get("/accounts/customer/2"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].customer.name").value("Not available"));
     }
 }
