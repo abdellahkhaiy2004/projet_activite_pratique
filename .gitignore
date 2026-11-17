@@ -1,0 +1,25 @@
+# Secrets
+.env
+
+# Java / Maven
+target/
+*.class
+*.log
+.mvn/wrapper/maven-wrapper.jar
+
+# IDE
+.idea/
+*.iml
+.vscode/
+.classpath
+.project
+.settings/
+
+# Node / Angular
+node_modules/
+frontend/angular-front/dist/
+frontend/angular-front/.angular/
+
+# OS
+Thumbs.db
+.DS_Store
