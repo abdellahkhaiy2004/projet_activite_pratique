@@ -14,6 +14,10 @@
     <name>ebank-bot</name>
     <description>AI chatbot (Spring AI agent)</description>
 
+    <properties>
+        <telegrambots.version>10.3.0</telegrambots.version>
+    </properties>
+
     <dependencies>
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -34,6 +38,16 @@
         <dependency>
             <groupId>org.springframework.ai</groupId>
             <artifactId>spring-ai-starter-mcp-client</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.telegram</groupId>
+            <artifactId>telegrambots-longpolling</artifactId>
+            <version>${telegrambots.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.telegram</groupId>
+            <artifactId>telegrambots-client</artifactId>
+            <version>${telegrambots.version}</version>
         </dependency>
         <dependency>
             <groupId>org.springdoc</groupId>
