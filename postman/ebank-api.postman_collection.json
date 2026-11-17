@@ -1,0 +1,352 @@
+{
+  "info": {
+    "name": "eBank API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "Customers, accounts, gateway routes and chatbot of the eBank project."
+  },
+  "variable": [
+    {
+      "key": "customer",
+      "value": "http://localhost:8056"
+    },
+    {
+      "key": "ebank",
+      "value": "http://localhost:8057"
+    },
+    {
+      "key": "bot",
+      "value": "http://localhost:8058"
+    },
+    {
+      "key": "gateway",
+      "value": "http://localhost:9999"
+    },
+    {
+      "key": "accountId",
+      "value": "replace-with-an-account-id"
+    }
+  ],
+  "item": [
+    {
+      "name": "Customer service (direct :8056)",
+      "item": [
+        {
+          "name": "List customers",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{customer}}/customers"
+            }
+          }
+        },
+        {
+          "name": "Get customer 1",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{customer}}/customers/1"
+            }
+          }
+        },
+        {
+          "name": "Get unknown customer (404)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{customer}}/customers/9999"
+            }
+          }
+        },
+        {
+          "name": "Create customer",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{customer}}/customers"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Sara\",\n  \"email\": \"sara@gmail.com\"\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "EBank service (direct :8057)",
+      "item": [
+        {
+          "name": "List accounts",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{ebank}}/accounts"
+            }
+          }
+        },
+        {
+          "name": "Get account by id",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{ebank}}/accounts/{{accountId}}"
+            }
+          }
+        },
+        {
+          "name": "Accounts of customer 1",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{ebank}}/accounts/customer/1"
+            }
+          }
+        },
+        {
+          "name": "Create account",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{ebank}}/accounts"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"balance\": 2500.0,\n  \"type\": \"SAVING_ACCOUNT\",\n  \"customerId\": 1\n}"
+            }
+          }
+        },
+        {
+          "name": "Create account, unknown customer (400)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{ebank}}/accounts"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"balance\": 100.0,\n  \"type\": \"CURRENT_ACCOUNT\",\n  \"customerId\": 999\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Through the gateway (:9999)",
+      "item": [
+        {
+          "name": "Customers",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{gateway}}/customer-service/customers"
+            }
+          }
+        },
+        {
+          "name": "Customer 1",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{gateway}}/customer-service/customers/1"
+            }
+          }
+        },
+        {
+          "name": "Accounts",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{gateway}}/ebank-service/accounts"
+            }
+          }
+        },
+        {
+          "name": "Accounts of customer 1",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{gateway}}/ebank-service/accounts/customer/1"
+            }
+          }
+        },
+        {
+          "name": "Create account",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{gateway}}/ebank-service/accounts"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"balance\": 900.0,\n  \"type\": \"CURRENT_ACCOUNT\",\n  \"customerId\": 2\n}"
+            }
+          }
+        },
+        {
+          "name": "Chatbot - normal",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{gateway}}/ebank-bot/chat?query=List all customers"
+            }
+          }
+        },
+        {
+          "name": "Chatbot - stream (SSE)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{gateway}}/ebank-bot/chat/stream?query=List all bank accounts"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Chatbot (direct :8058)",
+      "item": [
+        {
+          "name": "List customers",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{bot}}/chat?query=List all customers"
+            }
+          }
+        },
+        {
+          "name": "Get customer 2",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{bot}}/chat?query=Who is customer 2?"
+            }
+          }
+        },
+        {
+          "name": "List accounts",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{bot}}/chat?query=List all bank accounts"
+            }
+          }
+        },
+        {
+          "name": "Accounts of customer 1",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{bot}}/chat?query=Show the accounts of customer 1"
+            }
+          }
+        },
+        {
+          "name": "Create customer",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{bot}}/chat?query=Create a customer named Laila with email laila@gmail.com"
+            }
+          }
+        },
+        {
+          "name": "Out of scope question",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{bot}}/chat?query=What is the capital of France?"
+            }
+          }
+        },
+        {
+          "name": "Stream",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{bot}}/chat/stream?query=List all customers"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Infrastructure",
+      "item": [
+        {
+          "name": "Eureka dashboard",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8761"
+            }
+          }
+        },
+        {
+          "name": "Circuit breaker health (ebank)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{ebank}}/actuator/health"
+            }
+          }
+        },
+        {
+          "name": "Swagger - bot",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{bot}}/swagger-ui/index.html"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
