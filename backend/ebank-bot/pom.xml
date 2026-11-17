@@ -16,6 +16,7 @@
 
     <properties>
         <telegrambots.version>10.3.0</telegrambots.version>
+        <jda.version>5.6.1</jda.version>
     </properties>
 
     <dependencies>
@@ -48,6 +49,11 @@
             <groupId>org.telegram</groupId>
             <artifactId>telegrambots-client</artifactId>
             <version>${telegrambots.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>net.dv8tion</groupId>
+            <artifactId>JDA</artifactId>
+            <version>${jda.version}</version>
         </dependency>
         <dependency>
             <groupId>org.springdoc</groupId>
