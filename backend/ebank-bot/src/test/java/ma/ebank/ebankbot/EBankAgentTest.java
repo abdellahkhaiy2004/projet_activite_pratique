@@ -12,6 +12,10 @@ import org.springframework.ai.chat.model.Generation;
 import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.context.annotation.Bean;
+import org.springframework.ai.tool.ToolCallback;
+import org.springframework.ai.tool.ToolCallbackProvider;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import java.util.List;
@@ -23,8 +27,18 @@ import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-@SpringBootTest(properties = {"eureka.client.enabled=false", "spring.ai.openai.api-key=test-key"})
+@SpringBootTest(properties = {"eureka.client.enabled=false", "spring.ai.openai.api-key=test-key",
+        "spring.ai.mcp.client.enabled=false"})
 class EBankAgentTest {
+
+    /** MCP client is disabled in unit tests, so a stand-in provider is supplied. */
+    @TestConfiguration
+    static class NoToolsConfig {
+        @Bean
+        ToolCallbackProvider testToolCallbackProvider() {
+            return () -> new ToolCallback[0];
+        }
+    }
 
     @Autowired
     EBankAgent agent;
