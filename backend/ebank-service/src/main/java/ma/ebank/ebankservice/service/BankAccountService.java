@@ -1,5 +1,6 @@
 package ma.ebank.ebankservice.service;
 
+import feign.FeignException;
 import lombok.RequiredArgsConstructor;
 import ma.ebank.ebankservice.clients.CustomerRestClient;
 import ma.ebank.ebankservice.entity.BankAccount;
@@ -44,6 +45,7 @@ public class BankAccountService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                     "balance, type and customerId are required");
         }
+        checkCustomerExists(request.getCustomerId());
         BankAccount account = BankAccount.builder()
                 .id(UUID.randomUUID().toString())
                 .createdAt(LocalDateTime.now())
@@ -52,6 +54,22 @@ public class BankAccountService {
                 .customerId(request.getCustomerId())
                 .build();
         return bankAccountRepository.save(account);
+    }
+
+    /**
+     * The customer must exist in customer-service before an account is created.
+     * No fallback here: if the check cannot be completed, creation fails safely.
+     */
+    private void checkCustomerExists(Long customerId) {
+        try {
+            customerRestClient.findCustomerById(customerId);
+        } catch (FeignException.NotFound e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Cannot create account: customer " + customerId + " does not exist");
+        } catch (RuntimeException e) {
+            throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE,
+                    "Cannot create account: customer service is unavailable, customer could not be verified");
+        }
     }
 
     /** Attaches customer details to each account, calling customer-service once per distinct customer. */

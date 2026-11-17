@@ -2,10 +2,14 @@ package ma.ebank.ebankservice;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import feign.FeignException;
+import feign.Request;
 import ma.ebank.ebankservice.clients.CustomerRestClient;
 import ma.ebank.ebankservice.model.Customer;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import java.nio.charset.StandardCharsets;
+import java.util.Collections;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -95,5 +99,28 @@ class BankAccountControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"balance\":10}"))
                 .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void rejectsAccountForUnknownCustomer() throws Exception {
+        Request request = Request.create(Request.HttpMethod.GET, "/customers/999",
+                Collections.emptyMap(), null, StandardCharsets.UTF_8, null);
+        when(customerRestClient.findCustomerById(999L))
+                .thenThrow(new FeignException.NotFound("not found", request, null, Collections.emptyMap()));
+        mockMvc.perform(post("/accounts")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"balance\":100,\"type\":\"CURRENT_ACCOUNT\",\"customerId\":999}"))
+                .andExpect(status().isBadRequest());
+        mockMvc.perform(get("/accounts/customer/999"))
+                .andExpect(jsonPath("$", hasSize(0)));
+    }
+
+    @Test
+    void failsSafelyWhenCustomerServiceIsDown() throws Exception {
+        when(customerRestClient.findCustomerById(2L)).thenThrow(new RuntimeException("connection refused"));
+        mockMvc.perform(post("/accounts")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"balance\":100,\"type\":\"CURRENT_ACCOUNT\",\"customerId\":2}"))
+                .andExpect(status().isServiceUnavailable());
     }
 }
