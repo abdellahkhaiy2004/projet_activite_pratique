@@ -25,6 +25,7 @@ A Spring AI agent reads and creates live data through MCP tools, and is reachabl
 
 - Gateway (`/{service-id}/{path}`): `http://localhost:9999/customer-service/customers`, `.../ebank-service/accounts`, `.../ebank-bot/chat?query=...`, `.../ebank-bot/chat/stream?query=...`
 - Eureka: http://localhost:8761 · Swagger: `http://localhost:805{6,7,8}/swagger-ui/index.html` · MCP: `http://localhost:{8056,8057}/mcp`
+- Smoke test of the running stack: `scripts/smoke-test.sh` (add `--with-bot` to also ask the chatbot)
 - Postman collection: [`postman/ebank-api.postman_collection.json`](postman/ebank-api.postman_collection.json)
 
 ## Design notes
